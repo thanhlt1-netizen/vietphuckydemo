@@ -419,6 +419,7 @@ function AppContent() {
                   onModify={() => navigateTo('atelier')}
                   onProceedToTryOn={() => navigateTo('tryon')}
                   onSaveToLookbook={() => navigateTo('chronicle')}
+                  onNavigateToTailor={() => navigateTo('tailor')}
                   onSaveEvaluation={(evalSummary) => {
                     setLatestAIEvaluation(evalSummary);
                     setLatestCustomization(evalSummary.customizationSnapshot);

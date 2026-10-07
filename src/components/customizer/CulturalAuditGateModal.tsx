@@ -18,12 +18,17 @@ import {
   Share2,
   MessageSquare,
   Scissors,
-  ExternalLink
+  ExternalLink,
+  Send,
+  Tag,
+  Heart,
+  Plus
 } from 'lucide-react';
 import { OutfitCustomization, AIEvaluationSummary } from '../../types/customization';
 import { AIEvaluationService } from '../../services/aiEvaluationService';
 import { LookbookService, getCostumeImage } from '../../services/lookbookService';
 import { CommunityForumService } from '../../services/communityForumService';
+import { SaveToLookbookModal, SaveToLookbookPayload } from '../lookbook/SaveToLookbookModal';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export type AuditActionType = 'tryon' | 'tailor' | 'lookbook' | 'forum';
@@ -62,6 +67,17 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [evaluation, setEvaluation] = useState<AIEvaluationSummary | null>(null);
 
+  // Trạng thái mở popup Lưu Lookbook (cho phép chọn album, tạo album mới, đặt tên)
+  const [isSaveLookbookOpen, setIsSaveLookbookOpen] = useState<boolean>(false);
+
+  // Trạng thái mở modal Đăng Diễn Đàn (soạn status, chọn hashtag, preview)
+  const [isForumPublishOpen, setIsForumPublishOpen] = useState<boolean>(false);
+  const [forumTitle, setForumTitle] = useState<string>('');
+  const [forumAuthor, setForumAuthor] = useState<string>('GenZ Stylist');
+  const [forumStatusContent, setForumStatusContent] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('#CachTanGenZ');
+  const [isPublishingToForum, setIsPublishingToForum] = useState<boolean>(false);
+
   // Trạng thái thực hiện từng tác vụ trong trung tâm tác vụ (Action Hub)
   const [actionStatuses, setActionStatuses] = useState<{
     tailor: { done: boolean; message: string };
@@ -83,6 +99,15 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
+        // Nếu các modal con đang mở, ưu tiên đóng modal con trước
+        if (isSaveLookbookOpen) {
+          setIsSaveLookbookOpen(false);
+          return;
+        }
+        if (isForumPublishOpen) {
+          setIsForumPublishOpen(false);
+          return;
+        }
         e.preventDefault();
         onClose();
       }
@@ -92,7 +117,7 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isSaveLookbookOpen, isForumPublishOpen, onClose]);
 
   // Kích hoạt thẩm định mỗi khi modal mở ra
   useEffect(() => {
@@ -111,6 +136,12 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
           } catch {}
           setIsLoading(false);
           triggerHapticFeedback([30, 50]);
+
+          // Khởi tạo nội dung mặc định cho status đăng diễn đàn
+          setForumTitle(`${customization.costumeName} - ${result.cultural.badge || 'Phong Cách Cổ Phong'}`);
+          setForumStatusContent(
+            `Bản phối ${customization.costumeName} vừa hoàn tất kiểm duyệt di sản AI (${result.cultural.score}/100đ). Cùng chia sẻ cảm nghĩ và góp ý nhé!`
+          );
         }
       } catch (err) {
         console.error('Lỗi thẩm định văn hóa:', err);
@@ -127,12 +158,12 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
     };
   }, [isOpen, customization]);
 
-  // Tự động ẩn toast thông báo sau 3.5s
+  // Tự động ẩn toast thông báo sau 4s
   useEffect(() => {
     if (!lastActionToast) return;
     const timer = setTimeout(() => {
       setLastActionToast(null);
-    }, 3500);
+    }, 4000);
     return () => clearTimeout(timer);
   }, [lastActionToast]);
 
@@ -141,10 +172,10 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
   const isModerateHeritage = score >= 75 && score < 88;
   const isWarning = score < 75;
 
-  // Xử lý thực hiện tác vụ ĐẶT MAY NGHỆ NHÂN (giữ nguyên modal)
+  // 1. TÁC VỤ ĐẶT MAY NGHỆ NHÂN: LƯU HỒ SƠ & CHUYỂN SANG TRANG ĐẶT MAY THEO YÊU CẦU
   const handleActionTailor = useCallback(() => {
     if (!evaluation) return;
-    triggerHapticFeedback([25, 45, 25]);
+    triggerHapticFeedback([25, 50, 35]);
 
     try {
       localStorage.setItem('vietphuc_current_customization', JSON.stringify(customization));
@@ -165,20 +196,20 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
       ...prev,
       tailor: {
         done: true,
-        message: isVi ? 'Đã tạo hồ sơ may đo & lưu thông số' : 'Tailor dossier created & saved',
+        message: isVi ? 'Đã tạo hồ sơ may đo & chuyển trang' : 'Dossier created & navigating to tailor',
       },
     }));
 
-    setLastActionToast(
-      isVi
-        ? '✓ Đã lưu hồ sơ may đo thủ công! Trung tâm tác vụ vẫn sẵn sàng cho các thao tác tiếp theo.'
-        : '✓ Artisan tailor dossier saved! Direct Action Hub remains active.'
-    );
-
     onActionSelect('tailor', evaluation);
-  }, [evaluation, customization, score, isVi, onActionSelect]);
 
-  // Xử lý thực hiện tác vụ THỬ ĐỒ ẢO AI (giữ nguyên modal)
+    // Chuyển trực tiếp sang trang Đặt May
+    if (onNavigateToScene) {
+      onNavigateToScene('tailor');
+      onClose();
+    }
+  }, [evaluation, customization, score, isVi, onActionSelect, onNavigateToScene, onClose]);
+
+  // 2. TÁC VỤ THỬ ĐỒ ẢO AI: ĐỒNG BỘ TRANG PHỤC VÀO PHÒNG THỬ (GIỮ NGUYÊN TAB)
   const handleActionTryOn = useCallback(() => {
     if (!evaluation) return;
     triggerHapticFeedback([25, 45, 25]);
@@ -198,20 +229,31 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
 
     setLastActionToast(
       isVi
-        ? '✓ Đã đồng bộ trang phục vào Buồng Thử Đồ Ảo AI! Bạn có thể tiếp tục thao tác hoặc chuyển trang.'
-        : '✓ Outfit synced to AI Try-On! You can continue actions or navigate.'
+        ? '✓ Đã nạp trang phục vào Buồng Thử Đồ Ảo AI! Bạn có thể tiếp tục thao tác tại đây hoặc vào thử đồ sau.'
+        : '✓ Outfit synced to AI Try-On! You can continue actions or navigate later.'
     );
 
     onActionSelect('tryon', evaluation);
   }, [evaluation, customization, isVi, onActionSelect]);
 
-  // Xử lý thực hiện tác vụ ĐĂNG LÊN DIỄN ĐÀN (giữ nguyên modal)
-  const handleActionForum = useCallback(() => {
+  // 3. TÁC VỤ ĐĂNG LÊN DIỄN ĐÀN: MỞ MODAL SOẠN STATUS ĐĂNG BÀI
+  const handleOpenForumPublishModal = useCallback(() => {
     if (!evaluation) return;
-    triggerHapticFeedback([25, 45, 25]);
+    triggerHapticFeedback([20, 35]);
+    setIsForumPublishOpen(true);
+  }, [evaluation]);
+
+  // Xử lý khi người dùng ấn "Đăng Ngay" trong modal status diễn đàn -> ĐĂNG XONG GIỮ NGUYÊN TAB KIỂM DUYỆT
+  const handleConfirmPublishForum = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forumTitle.trim() || !evaluation) return;
+
+    setIsPublishingToForum(true);
+    triggerHapticFeedback([30, 60, 30]);
 
     try {
       const authorTags = [
+        selectedTag,
         `#${customization.costumeName.replace(/\s+/g, '')}`,
         '#VietPhucGenZ',
         '#CoPhucVietNam',
@@ -219,71 +261,79 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
       ];
 
       CommunityForumService.publishPost(
-        `${customization.costumeName} - ${evaluation.cultural.badge || 'Phong Cách Cổ Phong'}`,
-        `Bản phối ${customization.costumeName} vừa hoàn tất kiểm duyệt văn hóa AI (${score}/100đ). Cùng chia sẻ cảm nghĩ và góp ý nhé!`,
+        forumTitle.trim(),
+        forumAuthor.trim() || 'GenZ Stylist',
         customization,
-        authorTags
+        authorTags,
+        forumStatusContent.trim()
       );
-    } catch (e) {
-      console.warn('Lỗi đăng bài diễn đàn:', e);
+
+      setActionStatuses((prev) => ({
+        ...prev,
+        forum: {
+          done: true,
+          message: isVi ? 'Đã đăng bài lên Diễn Đàn Gen Z' : 'Published to Gen Z Forum',
+        },
+      }));
+
+      setLastActionToast(
+        isVi
+          ? `✓ Đã đăng bài "${forumTitle.trim()}" lên Diễn Đàn Gen Z thành công! Vẫn giữ nguyên ở trang kiểm duyệt.`
+          : `✓ Post published to Gen Z Forum! Retaining current audit view.`
+      );
+
+      onActionSelect('forum', evaluation);
+      setIsForumPublishOpen(false);
+    } catch (err) {
+      console.warn('Lỗi đăng bài diễn đàn:', err);
+    } finally {
+      setIsPublishingToForum(false);
     }
+  };
 
-    setActionStatuses((prev) => ({
-      ...prev,
-      forum: {
-        done: true,
-        message: isVi ? 'Đã đăng bài lên Diễn Đàn Gen Z' : 'Published to Gen Z Forum',
-      },
-    }));
-
-    setLastActionToast(
-      isVi
-        ? '✓ Đã đăng tải tác phẩm lên Diễn đàn cộng đồng Gen Z thành công!'
-        : '✓ Outfit published to Gen Z Community Forum successfully!'
-    );
-
-    onActionSelect('forum', evaluation);
-  }, [evaluation, customization, score, isVi, onActionSelect]);
-
-  // Xử lý thực hiện tác vụ LƯU VÀO LOOKBOOK (giữ nguyên modal)
-  const handleActionLookbook = useCallback(() => {
+  // 4. TÁC VỤ LƯU VÀO LOOKBOOK: MỞ POPUP LƯU LOOKBOOK ĐẦY ĐỦ (CHỌN/TẠO ALBUM)
+  const handleOpenSaveLookbookModal = useCallback(() => {
     if (!evaluation) return;
-    triggerHapticFeedback([25, 45, 25]);
+    triggerHapticFeedback([20, 35]);
+    setIsSaveLookbookOpen(true);
+  }, [evaluation]);
 
-    try {
-      const albums = LookbookService.getAlbums();
-      const targetAlbumId = albums[0]?.id || 'album_genz_vibes';
-      const imgSrc = getCostumeImage(customization.costumeId);
-
-      LookbookService.saveItemToAlbum(targetAlbumId, {
-        type: 'design',
-        customName: `${customization.costumeName} - Bản Phối ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
-        costumeName: customization.costumeName,
-        costumeId: customization.costumeId,
-        imageUrl: imgSrc,
-        customizationData: customization,
-        note: `Đạt kiểm duyệt văn hóa: ${score}/100đ · ${evaluation.cultural.badge || 'Chuẩn di sản'}.`,
-      });
-    } catch (e) {
-      console.warn('Lỗi lưu vào Lookbook:', e);
-    }
+  // Khi lưu Lookbook thành công -> ĐÓNG POPUP LOOKBOOK NHƯNG GIỮ NGUYÊN Ở TAB KIỂM DUYỆT
+  const handleLookbookSavedSuccess = (albumName: string, itemName: string) => {
+    setIsSaveLookbookOpen(false);
+    triggerHapticFeedback([25, 45]);
 
     setActionStatuses((prev) => ({
       ...prev,
       lookbook: {
         done: true,
-        message: isVi ? 'Đã lưu vào album Lookbook' : 'Archived in Lookbook Album',
+        message: isVi ? `Đã lưu vào "${albumName}"` : `Saved to "${albumName}"`,
       },
     }));
 
     setLastActionToast(
       isVi
-        ? '✓ Đã lưu tác phẩm vào Lookbook cá nhân thành công!'
-        : '✓ Saved to personal Lookbook album successfully!'
+        ? `✓ Đã lưu tác phẩm "${itemName}" vào Lookbook "${albumName}"! Giữ nguyên tab kiểm duyệt.`
+        : `✓ Saved "${itemName}" to Lookbook "${albumName}"! Retaining audit screen.`
     );
 
-    onActionSelect('lookbook', evaluation);
-  }, [evaluation, customization, score, isVi, onActionSelect]);
+    if (evaluation) {
+      onActionSelect('lookbook', evaluation);
+    }
+  };
+
+  const availableTags = [
+    '#CachTanGenZ',
+    '#VietPhucGenZ',
+    '#CoPhucVietNam',
+    '#DiSan',
+    '#Streetwear',
+    '#NhatBinh',
+    '#AoTac',
+    '#AoDai',
+    '#Y2K',
+    '#Tet2026',
+  ];
 
   if (!isOpen) return null;
 
@@ -292,18 +342,18 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
       <div
         onClick={(e) => {
           // Bấm ra ngoài vùng nền (backdrop) để tắt modal
-          if (e.target === e.currentTarget) {
+          if (e.target === e.currentTarget && !isSaveLookbookOpen && !isForumPublishOpen) {
             onClose();
           }
         }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/85 backdrop-blur-md"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/85 backdrop-blur-md select-none"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.93, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.93, y: 20 }}
           transition={{ type: 'spring', duration: 0.45, bounce: 0.15 }}
-          className="relative w-full max-w-2xl bg-gradient-to-b from-[#251A13] via-[#1E140E] to-[#150E09] border border-[#6B4D36] rounded-3xl shadow-2xl shadow-black/90 overflow-hidden my-auto select-none"
+          className="relative w-full max-w-2xl bg-gradient-to-b from-[#251A13] via-[#1E140E] to-[#150E09] border border-[#6B4D36] rounded-3xl shadow-2xl shadow-black/90 overflow-hidden my-auto"
         >
           {/* Top Banner Ribbon */}
           <div className="relative px-5 py-4 sm:px-6 sm:py-5 border-b border-[#3E2C1E] bg-[#1C140E]/90 flex items-center justify-between">
@@ -449,13 +499,13 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                       </h4>
                     </div>
                     <span className="text-[10px] font-sans text-[#BAA796] italic bg-[#241A13] px-2.5 py-0.5 rounded-full border border-[#423023]">
-                      {isVi ? 'Thao tác liên tục không tắt modal' : 'Active continuous hub'}
+                      {isVi ? 'Tác vụ độc lập & giữ nguyên tab' : 'Independent persistent hub'}
                     </span>
                   </div>
 
                   {/* 4 Nút Tác Vụ To, Rõ Ràng, Phản Hồi Xúc Giác & Đổi Trạng Thái Ngay Trên Nút */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* NÚT 1: ĐẶT MAY NGHỆ NHÂN */}
+                    {/* NÚT 1: ĐẶT MAY NGHỆ NHÂN (CHUYỂN SANG TRANG ĐẶT MAY) */}
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.025, y: -2 }}
@@ -482,37 +532,15 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                           <h5 className="text-xs sm:text-sm font-sans font-bold text-[#F5EFE6] group-hover:text-white truncate">
                             {isVi ? '1. Đặt May Nghệ Nhân' : '1. Artisan Tailoring'}
                           </h5>
-                          {actionStatuses.tailor.done && (
-                            <span className="text-[9px] font-sans font-bold px-1.5 py-0.5 rounded bg-[#78976A]/30 text-[#A6D495] border border-[#78976A]">
-                              ✓ {isVi ? 'Đã tạo' : 'Ready'}
-                            </span>
-                          )}
+                          <ArrowRight className="w-3.5 h-3.5 text-[#8FB57F] group-hover:translate-x-1 transition-transform" />
                         </div>
                         <p className="text-[10px] sm:text-[11px] font-sans text-[#BAA796] mt-0.5 truncate">
-                          {actionStatuses.tailor.done
-                            ? actionStatuses.tailor.message
-                            : isVi
-                            ? 'Gửi thông số cho nhà may cổ phục'
-                            : 'Export specs to artisan houses'}
+                          {isVi ? 'Chuyển sang trang đặt may đo nghệ nhân' : 'Navigate to artisan tailor order'}
                         </p>
                       </div>
-
-                      {actionStatuses.tailor.done && onNavigateToScene && (
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigateToScene('tailor');
-                            onClose();
-                          }}
-                          className="p-1 rounded-lg bg-[#3E5234] hover:bg-[#526D45] text-white text-[10px] flex items-center gap-0.5 cursor-pointer shrink-0"
-                          title={isVi ? 'Mở trang nhà may' : 'Open Tailor Map'}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </div>
-                      )}
                     </motion.button>
 
-                    {/* NÚT 2: THỬ ĐỒ ẢO AI */}
+                    {/* NÚT 2: THỬ ĐỒ ẢO AI (GIỮ NGUYÊN HOẶC CHUYỂN TRANG) */}
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.025, y: -2 }}
@@ -549,8 +577,8 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                           {actionStatuses.tryon.done
                             ? actionStatuses.tryon.message
                             : isVi
-                            ? 'Ướm trang phục đã duyệt lên chân dung'
-                            : 'Fit outfit onto your portrait'}
+                            ? 'Nạp đồ vào buồng thử đồ ảo'
+                            : 'Load outfit into virtual dressing room'}
                         </p>
                       </div>
 
@@ -561,7 +589,7 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                             onNavigateToScene('tryon');
                             onClose();
                           }}
-                          className="p-1 rounded-lg bg-[#304B5E] hover:bg-[#436780] text-white text-[10px] flex items-center gap-0.5 cursor-pointer shrink-0"
+                          className="p-1.5 rounded-lg bg-[#304B5E] hover:bg-[#436780] text-white text-[10px] flex items-center gap-0.5 cursor-pointer shrink-0"
                           title={isVi ? 'Mở phòng thử đồ' : 'Open Try-On'}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -569,12 +597,12 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                       )}
                     </motion.button>
 
-                    {/* NÚT 3: ĐĂNG LÊN DIỄN ĐÀN */}
+                    {/* NÚT 3: ĐĂNG LÊN DIỄN ĐÀN (MỞ POPUP STATUS & GIỮ NGUYÊN TAB SAU KHI ĐĂNG) */}
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.025, y: -2 }}
                       whileTap={{ scale: 0.96 }}
-                      onClick={handleActionForum}
+                      onClick={handleOpenForumPublishModal}
                       className={`p-3.5 sm:p-4 rounded-2xl text-left flex items-center gap-3.5 transition-all cursor-pointer group shadow-lg border relative overflow-hidden ${
                         actionStatuses.forum.done
                           ? 'bg-gradient-to-r from-[#3D2D15] to-[#2B1D0C] border-[#D4A043] ring-1 ring-[#D4A043]/50'
@@ -606,32 +634,18 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                           {actionStatuses.forum.done
                             ? actionStatuses.forum.message
                             : isVi
-                            ? 'Chia sẻ bản phối cùng cộng đồng Gen Z'
-                            : 'Share styling looks with scholars'}
+                            ? 'Soạn status & đăng lên cộng đồng'
+                            : 'Compose status & publish to community'}
                         </p>
                       </div>
-
-                      {actionStatuses.forum.done && onNavigateToScene && (
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigateToScene('forum');
-                            onClose();
-                          }}
-                          className="p-1 rounded-lg bg-[#59421A] hover:bg-[#735522] text-white text-[10px] flex items-center gap-0.5 cursor-pointer shrink-0"
-                          title={isVi ? 'Mở diễn đàn' : 'Open Forum'}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </div>
-                      )}
                     </motion.button>
 
-                    {/* NÚT 4: LƯU VÀO LOOKBOOK */}
+                    {/* NÚT 4: LƯU VÀO LOOKBOOK (MỞ POPUP CHỌN/TẠO LOOKBOOK & GIỮ NGUYÊN TAB SAU KHI LƯU) */}
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.025, y: -2 }}
                       whileTap={{ scale: 0.96 }}
-                      onClick={handleActionLookbook}
+                      onClick={handleOpenSaveLookbookModal}
                       className={`p-3.5 sm:p-4 rounded-2xl text-left flex items-center gap-3.5 transition-all cursor-pointer group shadow-lg border relative overflow-hidden ${
                         actionStatuses.lookbook.done
                           ? 'bg-gradient-to-r from-[#3B1C19] to-[#2A1210] border-[#BA3424] ring-1 ring-[#BA3424]/50'
@@ -663,24 +677,10 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
                           {actionStatuses.lookbook.done
                             ? actionStatuses.lookbook.message
                             : isVi
-                            ? 'Lưu vào album bộ sưu tập cá nhân'
-                            : 'Archive to personal album'}
+                            ? 'Chọn hoặc thêm album Lookbook mới'
+                            : 'Select or create new Lookbook album'}
                         </p>
                       </div>
-
-                      {actionStatuses.lookbook.done && onNavigateToScene && (
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigateToScene('lookbook');
-                            onClose();
-                          }}
-                          className="p-1 rounded-lg bg-[#57221C] hover:bg-[#732C24] text-white text-[10px] flex items-center gap-0.5 cursor-pointer shrink-0"
-                          title={isVi ? 'Mở Lookbook' : 'Open Lookbook'}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </div>
-                      )}
                     </motion.button>
                   </div>
                 </div>
@@ -790,6 +790,193 @@ export const CulturalAuditGateModal: React.FC<CulturalAuditGateModalProps> = ({
           </div>
         </motion.div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL LƯU LOOKBOOK ĐẦY ĐỦ (CHO PHÉP CHỌN ALBUM, TẠO ALBUM MỚI, ĐỔI TÊN) */}
+      {/* ========================================================================= */}
+      <SaveToLookbookModal
+        isOpen={isSaveLookbookOpen}
+        onClose={() => setIsSaveLookbookOpen(false)}
+        payload={{
+          type: 'design',
+          defaultName: `${customization.costumeName} - Bản Phối ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
+          costumeName: customization.costumeName,
+          costumeId: customization.costumeId,
+          imageUrl: getCostumeImage(customization.costumeId),
+          customizationData: customization,
+          note: `Đạt thẩm định di sản: ${score}/100đ · ${evaluation?.cultural.badge || 'Chuẩn di sản'}.`,
+        }}
+        onSavedSuccess={handleLookbookSavedSuccess}
+      />
+
+      {/* ========================================================================= */}
+      {/* MODAL SOẠN STATUS & ĐĂNG DIỄN ĐÀN (GIỮ NGUYÊN TAB KIỂM DUYỆT SAU KHI ĐĂNG) */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {isForumPublishOpen && (
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsForumPublishOpen(false);
+              }
+            }}
+            className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              className="relative max-w-lg w-full bg-[#1C140E] border border-[#D4A043]/60 rounded-3xl overflow-hidden shadow-2xl flex flex-col my-auto"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#3E2C1E] bg-[#241A13]/95">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#3D2D15] border border-[#D4A043] flex items-center justify-center text-[#F3C96B]">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-bold text-base text-[#F5EFE6]">
+                      {isVi ? 'Đăng Status Lên Diễn Đàn Gen Z' : 'Post Status to Gen Z Forum'}
+                    </h4>
+                    <p className="text-[11px] font-sans text-[#BAA796]">
+                      {isVi ? 'Chia sẻ cảm nghĩ & bản phối vừa kiểm duyệt' : 'Share your verified heritage outfit'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsForumPublishOpen(false)}
+                  className="p-1.5 rounded-full text-[#BAA796] hover:text-white hover:bg-[#322319] transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Form Body */}
+              <form onSubmit={handleConfirmPublishForum} className="p-5 space-y-4">
+                {/* Outfit Info Preview Card */}
+                <div className="p-3 rounded-2xl bg-[#140E0A] border border-[#3E2C1E] flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getCostumeImage(customization.costumeId)}
+                      alt={customization.costumeName}
+                      className="w-12 h-12 rounded-xl object-cover border border-[#5A402D]"
+                    />
+                    <div>
+                      <h5 className="text-xs font-serif font-bold text-[#F5EFE6]">
+                        {customization.costumeName}
+                      </h5>
+                      <span className="text-[10px] font-sans text-[#D4A043]">
+                        {evaluation?.cultural.badge || 'Chuẩn Di Sản'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-xl bg-[#241A13] border border-[#5A402D] text-right">
+                    <span className="text-[9px] font-sans text-[#BAA796] block uppercase">Di sản</span>
+                    <span className="text-sm font-serif font-bold text-[#78976A]">{score}/100</span>
+                  </div>
+                </div>
+
+                {/* Tiêu đề bài đăng */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-sans font-semibold text-[#D8CCC0]">
+                    {isVi ? 'Tiêu đề bài viết:' : 'Post Title:'}
+                  </label>
+                  <input
+                    type="text"
+                    value={forumTitle}
+                    onChange={(e) => setForumTitle(e.target.value)}
+                    placeholder={isVi ? 'Nhập tiêu đề ấn tượng...' : 'Enter post title...'}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#140D08] border border-[#423023] focus:border-[#D4A043] text-xs font-sans text-[#F5EFE6] focus:outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Tên tác giả */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-sans font-semibold text-[#D8CCC0]">
+                    {isVi ? 'Tên tác giả / Bút danh:' : 'Author Name:'}
+                  </label>
+                  <input
+                    type="text"
+                    value={forumAuthor}
+                    onChange={(e) => setForumAuthor(e.target.value)}
+                    placeholder="GenZ Stylist"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#140D08] border border-[#423023] focus:border-[#D4A043] text-xs font-sans text-[#F5EFE6] focus:outline-none"
+                  />
+                </div>
+
+                {/* Nội dung Status / Cảm nghĩ */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-sans font-semibold text-[#D8CCC0]">
+                    {isVi ? 'Status / Cảm nghĩ phối đồ:' : 'Status / Styling Thoughts:'}
+                  </label>
+                  <textarea
+                    value={forumStatusContent}
+                    onChange={(e) => setForumStatusContent(e.target.value)}
+                    rows={3}
+                    placeholder={isVi ? 'Chia sẻ câu chuyện, cảm hứng phối màu của bạn...' : 'Share your styling thoughts...'}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#140D08] border border-[#423023] focus:border-[#D4A043] text-xs font-sans text-[#F5EFE6] focus:outline-none resize-none"
+                  />
+                </div>
+
+                {/* Hashtag Selector */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-sans font-semibold text-[#D8CCC0] flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-[#D4A043]" />
+                    <span>{isVi ? 'Chủ đề / Hashtag chính:' : 'Primary Hashtag:'}</span>
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableTags.map((tag) => (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => setSelectedTag(tag)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-sans transition-all cursor-pointer border ${
+                          selectedTag === tag
+                            ? 'bg-[#536B49] text-white border-[#78976A] font-semibold'
+                            : 'bg-[#18100A] text-[#BAA796] border-[#3E2C1E] hover:border-[#D4A043]'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-[#3E2C1E]">
+                  <button
+                    type="button"
+                    onClick={() => setIsForumPublishOpen(false)}
+                    className="px-4 py-2 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#423023] text-xs font-sans text-[#BAA796] hover:text-white cursor-pointer"
+                  >
+                    {isVi ? 'Hủy' : 'Cancel'}
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isPublishingToForum || !forumTitle.trim()}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gradient-to-r from-[#D4A043] to-[#B3802B] hover:from-[#E5B355] hover:to-[#C4913C] text-[#1E140E] text-xs font-sans font-bold shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>
+                      {isPublishingToForum
+                        ? isVi
+                          ? 'Đang Đăng...'
+                          : 'Publishing...'
+                        : isVi
+                        ? 'Đăng Status Ngay'
+                        : 'Publish Status'}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };

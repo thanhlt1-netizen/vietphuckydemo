@@ -14,7 +14,8 @@ import {
   RefreshCw,
   Camera,
   Share2,
-  FileCheck
+  FileCheck,
+  Scissors
 } from 'lucide-react';
 import { AIEvaluationSummary, OutfitCustomization } from '../../types/customization';
 import { RecommendedCostume } from '../../types/context';
@@ -33,6 +34,7 @@ interface OracleRealmProps {
   onProceedToTryOn: () => void;
   onSaveToLookbook?: () => void;
   onSaveEvaluation?: (evalSummary: AIEvaluationSummary) => void;
+  onNavigateToTailor?: () => void;
 }
 
 export const OracleRealm: React.FC<OracleRealmProps> = ({
@@ -42,6 +44,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
   onModify,
   onProceedToTryOn,
   onSaveEvaluation,
+  onNavigateToTailor,
 }) => {
   const { t, language } = useLanguage();
   const isVi = language === 'vi';
@@ -389,6 +392,19 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                 </button>
 
                 <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+                  {/* Nút Đặt May Nghệ Nhân (Chuyển sang trang đặt may đo) */}
+                  {isPassed && onNavigateToTailor && (
+                    <button
+                      type="button"
+                      onClick={onNavigateToTailor}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#78976A]/60 text-xs font-sans text-[#8FB57F] hover:text-[#F5EFE6] transition-all cursor-pointer shadow-sm"
+                      title={isVi ? 'Chuyển sang đặt may đo nghệ nhân' : 'Custom Tailor'}
+                    >
+                      <Scissors className="w-4 h-4 text-[#8FB57F]" />
+                      <span>{isVi ? 'Đặt May Nghệ Nhân' : 'Custom Tailor'}</span>
+                    </button>
+                  )}
+
                   {/* Nút Lưu vào Lookbook (Chỉ hiển thị sau khi AI đã thẩm định) */}
                   {isPassed && (
                     <button

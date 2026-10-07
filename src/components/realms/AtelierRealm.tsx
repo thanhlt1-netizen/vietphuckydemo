@@ -589,36 +589,19 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
   };
 
   // Xử lý khi AI hoàn tất kiểm duyệt và người dùng chọn tác vụ trực tiếp trên modal
+  // Giữ nguyên hiển thị Trung tâm tác vụ trực tiếp chứ không tắt luôn theo yêu cầu
   const handleAuditActionSelect = (action: AuditActionType, auditResult: AIEvaluationSummary) => {
     setVerifiedAudit(auditResult);
     setIsAuditVerified(true);
-    setIsAuditModalOpen(false);
+    // Lưu ý: Không tự ý tắt modal (setIsAuditModalOpen(false)), giữ nguyên trung tâm tác vụ
 
     try {
       localStorage.setItem('vietphuc_latest_ai_evaluation', JSON.stringify(auditResult));
+      localStorage.setItem('vietphuc_current_customization', JSON.stringify(customization));
     } catch {}
 
     const badgeTitle = auditResult.cultural.badge || (isVi ? 'Đạt Chuẩn Di Sản' : 'Heritage Approved');
-    showToast(isVi ? `✓ Đã kiểm duyệt: ${auditResult.cultural.score}/100đ · ${badgeTitle}` : `✓ Cultural audit passed: ${auditResult.cultural.score}/100pts`);
-
-    // Chuyển ngay tới tác vụ được chọn
-    if (action === 'tryon' && onContinueDirect) {
-      setTimeout(() => onContinueDirect(customization), 150);
-    } else if (action === 'tailor' && onNavigateToTailor) {
-      try {
-        localStorage.setItem(
-          'vietphuc_current_customization',
-          JSON.stringify(customization)
-        );
-      } catch {}
-      setTimeout(() => onNavigateToTailor(customization), 150);
-    } else if (action === 'lookbook') {
-      setTimeout(() => handleOpenSaveLookbook(), 150);
-    } else if (action === 'forum') {
-      setTimeout(() => handleOpenPublishForum(), 150);
-    } else if (action === 'anime') {
-      setTimeout(() => setIsAnimeModalOpen(true), 150);
-    }
+    showToast(isVi ? `✓ Đã thẩm định: ${auditResult.cultural.score}/100đ · ${badgeTitle}` : `✓ Heritage approved: ${auditResult.cultural.score}/100pts`);
   };
 
   return (
@@ -1290,6 +1273,17 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
         customization={customization}
         onActionSelect={handleAuditActionSelect}
         onResetToDefaultColors={handleResetTraditionalColors}
+        onNavigateToScene={(scene) => {
+          if (scene === 'tryon' && onContinueDirect) {
+            onContinueDirect(customization);
+          } else if (scene === 'tailor' && onNavigateToTailor) {
+            onNavigateToTailor(customization);
+          } else if (scene === 'lookbook' && onNavigateToLookbook) {
+            onNavigateToLookbook();
+          } else if (scene === 'forum' && onNavigateToForum) {
+            onNavigateToForum();
+          }
+        }}
       />
 
       {/* Community Forum Modal Drawer */}

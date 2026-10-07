@@ -1,0 +1,9 @@
+{
+  "name": "Việt Phục Ký",
+  "description": "Không gian khám phá, phối đồ và cách tân Việt phục cổ truyền cho thế hệ Gen Z với thẩm mỹ điện ảnh và chuẩn mực văn hóa.",
+  "permissions": [],
+  "capabilities": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

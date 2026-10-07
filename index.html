@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 78,10 98,30 98,70 78,90 50,98 22,90 2,70 2,30 22,10' fill='%2324140D' stroke='%23D4A043' stroke-width='4'/%3E%3Cpolygon points='50,8 74,15 92,33 92,67 74,85 50,92 26,85 8,67 8,33 26,15' fill='%2338140E' stroke='%23E5B342' stroke-width='1.5' stroke-dasharray='3 2'/%3E%3Cpath d='M50 20 L53 38 L47 38 Z M45 42 C36 34 22 30 18 20 C25 24 33 32 40 40 Z M55 42 C64 34 78 30 82 20 C75 24 67 32 60 40 Z' fill='%23F6D472'/%3E%3Cpath d='M35 72 C42 78 58 78 65 72 C63 76 57 80 50 80 C43 80 37 76 35 72 Z' fill='%23D4A043'/%3E%3Ccircle cx='50' cy='46' r='3.5' fill='%23FFFFFF'/%3E%3Ccircle cx='50' cy='46' r='2' fill='%23FCEAA7'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Việt Phục Ký - Ngàn Năm Di Sản · Khởi Sắc Đương Đại</title>
+    <meta name="description" content="Không gian khám phá, phối đồ và cách tân Việt phục cổ truyền cho thế hệ Gen Z với thẩm mỹ điện ảnh và chuẩn mực văn hóa." />
+    <meta property="og:title" content="Việt Phục Ký - Ngàn Năm Di Sản · Khởi Sắc Đương Đại" />
+    <meta property="og:description" content="Không gian khám phá, phối đồ và cách tân Việt phục cổ truyền cho thế hệ Gen Z với thẩm mỹ điện ảnh và chuẩn mực văn hóa." />
+    <meta property="og:site_name" content="Việt Phục Ký" />
+    <!-- Google Fonts for Vietnamese Typography: Playfair Display (Heading) & Be Vietnam Pro (Body & UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+    <script>
+      // Suppress harmless Vite WebSocket connection errors in preview/iframe environment
+      (function () {
+        var suppress = function (e) {
+          var msg = (e && (e.message || (e.reason && (e.reason.message || String(e.reason))))) || '';
+          if (typeof msg === 'string' && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('websocket') !== -1)) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+          return false;
+        };
+        window.addEventListener('unhandledrejection', suppress, true);
+        window.addEventListener('error', suppress, true);
+
+        // Also intercept console.error for WebSocket connection logs
+        var origConsoleError = console.error;
+        console.error = function () {
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            if (typeof arg === 'string' && (arg.indexOf('WebSocket') !== -1 || arg.indexOf('websocket') !== -1)) {
+              return;
+            }
+          }
+          origConsoleError.apply(console, arguments);
+        };
+      })();
+    </script>
+  </head>
+  <body class="bg-[#120C08] text-[#F5EFE6] antialiased overflow-x-hidden select-none font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

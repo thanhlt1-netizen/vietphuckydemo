@@ -801,9 +801,8 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
         {/* Right Column: Customization Panel Tabs (7 cols) */}
         <div className="lg:col-span-7 bg-[#241A13]/90 backdrop-blur-md border border-[#423023] rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-7 shadow-xl shadow-black/40 flex flex-col justify-between">
           <div>
-            {/* Category Navigation Tabs */}
-            <div className="flex items-center justify-between border-b border-[#3E2C1E] pb-2 mb-3 sm:pb-3 sm:mb-6 flex-wrap gap-1.5">
-              <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Category Navigation Tabs */}
+              <div className="flex items-center gap-1.5 flex-wrap border-b border-[#3E2C1E] pb-2 mb-3 sm:pb-3 sm:mb-6">
                 {/* TAB 1: TỰ PHỐI MÀU & VẢI (5 MÀU ĐƠN SẮC & VẢI CỔ TRUYỀN) */}
                 <button
                   type="button"
@@ -837,18 +836,6 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
                   )}
                 </button>
               </div>
-
-              {/* Nút xem diễn đàn cộng đồng */}
-              <button
-                type="button"
-                onClick={onNavigateToForum || handleOpenBrowseForum}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1C140E] hover:bg-[#2A1D14] border border-[#423023] text-xs font-sans text-[#D4A043] hover:text-[#F5EFE6] transition-colors cursor-pointer"
-                title={isVi ? 'Đến trang Diễn Đàn Cộng Đồng' : 'Explore Community Forum'}
-              >
-                <Globe className="w-3.5 h-3.5 text-[#D4A043]" />
-                <span>{isVi ? 'Diễn đàn Gen Z' : 'Gen Z Forum'}</span>
-              </button>
-            </div>
 
             {/* TAB: TỰ PHỐI MÀU (TÍCH HỢP 5 MÀU ĐƠN SẮC & TOÀN BỘ VẢI CỔ TRUYỀN THÀNH 1 DANH SÁCH DUY NHẤT) */}
             {activeTab === 'colors' && (() => {
@@ -1213,7 +1200,7 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
             )}
           </div>
 
-          {/* Action Footer: Điều hướng, Thử đồ, Kiểm duyệt văn hóa, Đặt may */}
+          {/* Action Footer: Điều hướng và Kiểm duyệt văn hóa */}
           <div className="mt-8 pt-5 border-t border-[#3E2C1E] flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
               type="button"
@@ -1224,44 +1211,16 @@ export const AtelierRealm: React.FC<AtelierRealmProps> = ({
               <span>{isVi ? 'Đổi Phục Trang' : 'Change Costume'}</span>
             </button>
 
-            <div className="flex flex-wrap items-center justify-end gap-2.5 w-full sm:w-auto">
-              {/* Nút Thử đồ ảo (Try-on) - Bắt buộc duyệt văn hóa */}
-              {onContinueDirect && (
-                <button
-                  type="button"
-                  onClick={handleRequestTryOn}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#423023] text-xs font-sans text-[#D8CCC0] hover:text-[#F5EFE6] transition-all cursor-pointer"
-                  title={isVi ? 'Kiểm duyệt văn hóa & chuyển sang thử đồ ảo' : 'Audit & proceed to Virtual Try-On'}
-                >
-                  <Camera className="w-3.5 h-3.5 text-[#D4A043]" />
-                  <span>{isVi ? 'Thử Đồ Ảo' : 'Virtual Try-On'}</span>
-                </button>
-              )}
-
-              {/* Nút Kiểm Duyệt Văn Hóa AI (Bắt Buộc) */}
-              <button
-                type="button"
-                onClick={handleRequestManualAudit}
-                className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 rounded-full bg-gradient-to-r from-[#BA3424] via-[#A82B1C] to-[#872013] hover:from-[#C73C2A] hover:to-[#962517] text-[#F5EFE6] text-xs sm:text-sm font-sans font-semibold shadow-lg shadow-[#872013]/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer ring-1 ring-[#D4A043]/30"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#F3C96B]" />
-                <span>{isVi ? 'Kiểm Duyệt Văn Hóa AI' : 'AI Cultural Audit'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              {/* Nút Đặt May Nghệ Nhân - Bắt buộc duyệt văn hóa */}
-              {onNavigateToTailor && (
-                <button
-                  type="button"
-                  onClick={handleRequestTailor}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#536B49]/50 text-xs font-sans text-[#D8CCC0] hover:text-[#F5EFE6] transition-all cursor-pointer"
-                  title={isVi ? 'Kiểm duyệt văn hóa & gửi may đo nghệ nhân' : 'Audit & send to tailor'}
-                >
-                  <MapPin className="w-3.5 h-3.5 text-[#78976A]" />
-                  <span>{isVi ? 'Đặt May Bộ Này' : 'Custom Tailor'}</span>
-                </button>
-              )}
-            </div>
+            {/* Nút Duy Nhất: Kiểm Duyệt Văn Hóa AI (Thẩm định di sản & mở trung tâm tác vụ trực tiếp) */}
+            <button
+              type="button"
+              onClick={handleRequestManualAudit}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#BA3424] via-[#A82B1C] to-[#872013] hover:from-[#C73C2A] hover:to-[#962517] text-[#F5EFE6] text-xs sm:text-sm font-sans font-semibold shadow-xl shadow-[#872013]/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer ring-1 ring-[#D4A043]/40"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#F3C96B]" />
+              <span>{isVi ? 'Kiểm Duyệt Văn Hóa AI' : 'AI Cultural Audit'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

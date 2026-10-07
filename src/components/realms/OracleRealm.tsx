@@ -10,20 +10,15 @@ import {
   Palette, 
   Wand2, 
   Info,
-  BookmarkCheck,
   RefreshCw,
   Camera,
-  Share2,
-  FileCheck,
-  Scissors
+  FileCheck
 } from 'lucide-react';
 import { AIEvaluationSummary, OutfitCustomization } from '../../types/customization';
 import { RecommendedCostume } from '../../types/context';
-import { Character2DViewer, captureCroquisModelImage } from '../customizer/Character2DViewer';
+import { Character2DViewer } from '../customizer/Character2DViewer';
 import { AIEvaluationService } from '../../services/aiEvaluationService';
 import { normalizeCostumeKey, getCostumeDefaultColors } from '../../data/costumeDefaults';
-import { SaveToLookbookModal, SaveToLookbookPayload } from '../lookbook/SaveToLookbookModal';
-import { CommunityForumModal } from '../customizer/CommunityForumModal';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface OracleRealmProps {
@@ -44,7 +39,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
   onModify,
   onProceedToTryOn,
   onSaveEvaluation,
-  onNavigateToTailor,
 }) => {
   const { t, language } = useLanguage();
   const isVi = language === 'vi';
@@ -83,13 +77,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Modal Lưu Lookbook sau thẩm định
-  const [isSaveLookbookOpen, setIsSaveLookbookOpen] = useState(false);
-  const [capturedDesignImage, setCapturedDesignImage] = useState<string | null>(null);
-
-  // Modal Đăng Diễn đàn sau thẩm định
-  const [isForumOpen, setIsForumOpen] = useState(false);
-
   // Đồng bộ khi prop evaluation hoặc active costume thay đổi
   useEffect(() => {
     if (isMatchingEvaluation) {
@@ -120,23 +107,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
     } finally {
       setIsEvaluating(false);
     }
-  };
-
-  // Mở modal lưu Lookbook
-  const handleOpenLookbook = async () => {
-    try {
-      const captured = await captureCroquisModelImage();
-      if (captured && captured.length > 50) {
-        setCapturedDesignImage(captured);
-      }
-    } catch (e) {
-      console.warn('Lỗi trích xuất model design:', e);
-    }
-    setIsSaveLookbookOpen(true);
-  };
-
-  const handleLookbookSaveSuccess = (albumName: string, itemName: string) => {
-    showToast(isVi ? `Đã lưu "${itemName}" vào Lookbook "${albumName}" thành công!` : `Saved "${itemName}" to Lookbook "${albumName}"!`);
   };
 
   const isPassed = currentEval?.cultural.isPassed ?? false;
@@ -380,7 +350,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                 )}
               </div>
 
-              {/* Action Buttons: Chỉnh sửa lại / Lưu Lookbook / Đăng Diễn Đàn / Thử đồ ảo */}
+              {/* Action Buttons: Chỉnh sửa lại / Thử đồ ảo */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <button
                   type="button"
@@ -392,45 +362,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                 </button>
 
                 <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
-                  {/* Nút Đặt May Nghệ Nhân (Chuyển sang trang đặt may đo) */}
-                  {isPassed && onNavigateToTailor && (
-                    <button
-                      type="button"
-                      onClick={onNavigateToTailor}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#78976A]/60 text-xs font-sans text-[#8FB57F] hover:text-[#F5EFE6] transition-all cursor-pointer shadow-sm"
-                      title={isVi ? 'Chuyển sang đặt may đo nghệ nhân' : 'Custom Tailor'}
-                    >
-                      <Scissors className="w-4 h-4 text-[#8FB57F]" />
-                      <span>{isVi ? 'Đặt May Nghệ Nhân' : 'Custom Tailor'}</span>
-                    </button>
-                  )}
-
-                  {/* Nút Lưu vào Lookbook (Chỉ hiển thị sau khi AI đã thẩm định) */}
-                  {isPassed && (
-                    <button
-                      type="button"
-                      onClick={handleOpenLookbook}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#423023] text-xs font-sans text-[#D4A043] hover:text-[#F5EFE6] transition-all cursor-pointer shadow-sm"
-                      title={isVi ? 'Lưu bản thiết kế đã duyệt vào Lookbook' : 'Save to Lookbook'}
-                    >
-                      <BookmarkCheck className="w-4 h-4 text-[#D4A043]" />
-                      <span>{t('btn.save_lookbook')}</span>
-                    </button>
-                  )}
-
-                  {/* Nút Đăng lên Diễn đàn (Chỉ hiển thị sau khi AI đã thẩm định) */}
-                  {isPassed && (
-                    <button
-                      type="button"
-                      onClick={() => setIsForumOpen(true)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#241A13] hover:bg-[#322319] border border-[#423023] text-xs font-sans text-[#78976A] hover:text-[#F5EFE6] transition-all cursor-pointer shadow-sm"
-                      title={isVi ? 'Chia sẻ bản phối lên diễn đàn Gen Z' : 'Share to Forum'}
-                    >
-                      <Share2 className="w-4 h-4 text-[#78976A]" />
-                      <span>{isVi ? 'Đăng Diễn Đàn' : 'Share to Forum'}</span>
-                    </button>
-                  )}
-
                   {/* Nút Tiếp tục sang Thử đồ ảo (Virtual Try-on) */}
                   <button
                     type="button"
@@ -516,40 +447,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
           )}
         </div>
       </div>
-
-      {/* Modal 1: Lưu Lookbook Sau Thẩm Định */}
-      {currentEval && (
-        <SaveToLookbookModal
-          isOpen={isSaveLookbookOpen}
-          onClose={() => setIsSaveLookbookOpen(false)}
-          payload={{
-            type: 'design',
-            defaultName: `${activeCostumeName} - ${isVi ? 'Cách Tân' : 'Modernized'}`,
-            costumeName: activeCostumeName,
-            costumeId: activeCostumeId,
-            imageUrl: capturedDesignImage || '',
-            customizationData: activeCustomization,
-            gender: activeCustomization.gender,
-            culturalNote: currentEval.cultural.feedback,
-            stylingNote: currentEval.aesthetic.overallComment,
-          }}
-          onSavedSuccess={handleLookbookSaveSuccess}
-        />
-      )}
-
-      {/* Modal 2: Đăng Lên Diễn Đàn Sau Thẩm Định */}
-      {currentEval && (
-        <CommunityForumModal
-          isOpen={isForumOpen}
-          onClose={() => setIsForumOpen(false)}
-          currentCustomization={activeCustomization}
-          onApplyOutfit={() => {}}
-          initialMode="publish"
-          onPublished={() => {
-            showToast(isVi ? 'Đã đăng bản phối lên Diễn đàn cộng đồng thành công!' : 'Shared outfit to community forum successfully!');
-          }}
-        />
-      )}
     </div>
   );
 };

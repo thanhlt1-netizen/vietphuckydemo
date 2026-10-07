@@ -20,7 +20,11 @@ import {
   Award,
   CheckCircle2,
   Eye,
-  X
+  X,
+  Globe,
+  Loader2,
+  HelpCircle,
+  Link2
 } from 'lucide-react';
 import {
   MUSEUM_ARTIFACTS,
@@ -28,6 +32,7 @@ import {
   MuseumArtifact,
   MuseumDynastyTimeline
 } from '../../data/museumData';
+import { HeritageSearchService, SearchGroundingResult } from '../../services/heritageSearchService';
 import { RealmScene } from '../../types/scenes';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -38,7 +43,7 @@ interface MuseumRealmProps {
   onBack?: () => void;
 }
 
-type TabMode = 'artifacts' | 'timeline' | 'anatomy' | 'quiz';
+type TabMode = 'artifacts' | 'timeline' | 'anatomy' | 'search_grounding' | 'quiz';
 
 export const MuseumRealm: React.FC<MuseumRealmProps> = ({
   onNavigateToCostume,
@@ -55,6 +60,42 @@ export const MuseumRealm: React.FC<MuseumRealmProps> = ({
   const [selectedArtifact, setSelectedArtifact] = useState<MuseumArtifact | null>(null);
   const [isAudioGuideActive, setIsAudioGuideActive] = useState(false);
   const [selectedTimelineEra, setSelectedTimelineEra] = useState<string>(MUSEUM_TIMELINE[0].id);
+
+  // Search Grounding State (Gemini 3.5 Flash + Google Search)
+  const [aiSearchInput, setAiSearchInput] = useState('');
+  const [isAiSearching, setIsAiSearching] = useState(false);
+  const [aiSearchResult, setAiSearchResult] = useState<SearchGroundingResult | null>(null);
+
+  // Suggested heritage research prompts
+  const suggestedHeritageQueries = isVi
+    ? [
+        'Ý nghĩa của hoa văn Thủy Ba sóng nước trên triều phục Nguyễn?',
+        'Nguồn gốc lịch sử Áo Ngũ Thân năm 1744 của Chúa Nguyễn Phúc Khoát?',
+        'Điểm khác biệt giữa Áo Tấc tay thụng và Áo Ngũ Thân tay chẽn?',
+        'Lịch sử làng lụa Vạn Phúc và Lãnh Mỹ A nhuộm mặc nưa?',
+        'Bảo vật quốc gia y phục Tượng Hoàng Hậu Trịnh Thị Ngọc Trúc?'
+      ]
+    : [
+        'Meaning of Thuy Ba water wave motifs on Nguyen dynasty robes?',
+        'Historical origins of Five-Panel Robe in 1744 by Lord Nguyen Phuc Khoat?',
+        'Differences between Wide-Sleeve Ao Tac and Narrow-Sleeve Ao Ngu Than?',
+        'History of Van Phuc silk and Lanh My A natural mac nua dyeing?',
+        'National treasure royal attire of Queen Trinh Thi Ngoc Truc statue?'
+      ];
+
+  const handleExecuteSearchGrounding = async (queryToSearch: string) => {
+    if (!queryToSearch.trim() || isAiSearching) return;
+    setIsAiSearching(true);
+    setAiSearchInput(queryToSearch);
+    try {
+      const result = await HeritageSearchService.searchHeritageGrounding(queryToSearch);
+      setAiSearchResult(result);
+    } catch (err) {
+      console.warn('Lỗi tra cứu di sản:', err);
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
 
   // Quiz state
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
@@ -261,6 +302,7 @@ export const MuseumRealm: React.FC<MuseumRealmProps> = ({
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 mb-6 border-b border-[#3E2C1E]">
         {[
           { id: 'artifacts', label: isVi ? 'Kho Hiện Vật Quý' : 'Relics & Artifacts', icon: Landmark },
+          { id: 'search_grounding', label: isVi ? 'AI Khảo Cứu Google Search' : 'AI Heritage Search', icon: Globe },
           { id: 'timeline', label: isVi ? 'Dòng Thời Gian Y Phục' : 'Dynasty Timeline', icon: Clock },
           { id: 'anatomy', label: isVi ? 'Giải Phẫu Cấu Trúc Áo' : 'Robes Anatomy', icon: Layers },
           { id: 'quiz', label: isVi ? 'Đố Vui Tri Thức Di Sản' : 'Heritage Trivia Quiz', icon: Award },
@@ -280,6 +322,11 @@ export const MuseumRealm: React.FC<MuseumRealmProps> = ({
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
+              {tab.id === 'search_grounding' && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#D4A043]/30 text-[#E5B869] border border-[#D4A043]/40 font-sans">
+                  Live
+                </span>
+              )}
             </button>
           );
         })}
@@ -594,6 +641,149 @@ export const MuseumRealm: React.FC<MuseumRealmProps> = ({
               </div>
             ))}
           </div>
+        </motion.div>
+      )}
+
+      {/* TAB: SEARCH GROUNDING (GEMINI 3.5 FLASH + GOOGLE SEARCH) */}
+      {activeTab === 'search_grounding' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-4xl mx-auto">
+          {/* Header Info Banner */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-[#241A13] via-[#2A1E16] to-[#1C140E] border border-[#5A402D]/60 shadow-xl relative overflow-hidden">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#D4A043]/15 border border-[#D4A043]/30 flex items-center justify-center shrink-0 text-[#D4A043]">
+                <Globe className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#536B49]/30 text-[#8FB57F] border border-[#8FB57F]/30 text-[10px] font-sans font-semibold uppercase mb-1">
+                  <span>Google Search Grounding · gemini-3.5-flash</span>
+                </div>
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#F5EFE6] mb-1">
+                  {isVi ? 'Trợ Lý Khảo Cứu Di Sản Trực Tuyến' : 'Real-time Heritage Research Assistant'}
+                </h2>
+                <p className="text-xs text-[#BAA796] font-sans leading-relaxed">
+                  {isVi
+                    ? 'Đặt câu hỏi về bất kỳ điển chế y phục, hoa văn, hiện vật bảo tàng hay kỹ thuật dệt nhuộm cổ truyền để nhận thông tin chuẩn xác được kiểm chứng thời gian thực.'
+                    : 'Ask any question on historical costume rules, museum relics, or traditional weaving techniques with verified live Google Search data.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Interactive Query Input */}
+            <div className="mt-5 relative flex items-center">
+              <Search className="w-4 h-4 absolute left-4 text-[#D4A043]" />
+              <input
+                type="text"
+                value={aiSearchInput}
+                onChange={(e) => setAiSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleExecuteSearchGrounding(aiSearchInput);
+                  }
+                }}
+                placeholder={
+                  isVi
+                    ? 'Tra cứu: vd. "Nguồn gốc Áo Ngũ Thân", "Kỹ thuật nhuộm mặc nưa Lãnh Mỹ A"...'
+                    : 'Search: e.g. "Origins of Five-Panel Robe", "Lanh My A silk dyeing technique"...'
+                }
+                className="w-full pl-11 pr-28 py-3.5 rounded-2xl bg-[#140D08] border border-[#3E2C1E] text-xs sm:text-sm text-[#F5EFE6] placeholder-[#8A7561] focus:outline-none focus:border-[#D4A043] shadow-inner transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => handleExecuteSearchGrounding(aiSearchInput)}
+                disabled={isAiSearching || !aiSearchInput.trim()}
+                className="absolute right-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4A043] to-[#B9832E] text-[#1A120C] font-serif font-bold text-xs hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
+              >
+                {isAiSearching ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{isVi ? 'Đang tra...' : 'Searching...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{isVi ? 'Khảo Cứu' : 'Research'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Suggested Heritage Prompts */}
+            <div className="mt-4 pt-3 border-t border-[#3E2C1E]/60 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-[#8A7561] font-sans flex items-center gap-1">
+                <HelpCircle className="w-3 h-3" />
+                {isVi ? 'Gợi ý chủ đề:' : 'Suggested topics:'}
+              </span>
+              {suggestedHeritageQueries.map((promptText, pIdx) => (
+                <button
+                  key={`sug-q-${pIdx}`}
+                  type="button"
+                  onClick={() => handleExecuteSearchGrounding(promptText)}
+                  className="text-[11px] font-sans px-2.5 py-1 rounded-lg bg-[#18110B] hover:bg-[#2E2017] text-[#BAA796] hover:text-[#E5B869] border border-[#3E2C1E] hover:border-[#D4A043]/50 transition-colors cursor-pointer text-left"
+                >
+                  {promptText}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Results Display */}
+          <AnimatePresence>
+            {aiSearchResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="p-6 sm:p-8 rounded-3xl bg-[#241A13]/95 border border-[#423023] shadow-2xl space-y-6"
+              >
+                {/* Result Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#3E2C1E] pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-3 h-3 rounded-full bg-[#78976A] shadow-[0_0_8px_#78976A]" />
+                    <h3 className="font-serif font-bold text-lg text-[#F5EFE6]">
+                      {aiSearchResult.query}
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-sans text-[#E5B869] px-2.5 py-1 rounded-full bg-[#18110B] border border-[#3E2C1E]">
+                    {aiSearchResult.modelUsed}
+                  </span>
+                </div>
+
+                {/* Formatted Answer Body */}
+                <div className="prose prose-invert max-w-none text-xs sm:text-sm text-[#D8CCC0] font-sans leading-relaxed whitespace-pre-line space-y-2 bg-[#1A120C]/80 p-5 rounded-2xl border border-[#3E2C1E]">
+                  {aiSearchResult.answer}
+                </div>
+
+                {/* Search Queries and Cited Sources */}
+                {aiSearchResult.sources && aiSearchResult.sources.length > 0 && (
+                  <div className="space-y-3 pt-3 border-t border-[#3E2C1E]">
+                    <span className="text-xs font-serif font-bold text-[#E5B869] flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-[#D4A043]" />
+                      {isVi ? 'Nguồn tham chiếu & Tư liệu bảo tàng xác thực:' : 'Verified museum references & cited sources:'}
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {aiSearchResult.sources.map((src, sIdx) => (
+                        <a
+                          key={`grounding-src-${sIdx}`}
+                          href={src.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between gap-2 p-3 rounded-xl bg-[#140D08] hover:bg-[#1E150E] border border-[#3E2C1E] hover:border-[#D4A043]/60 transition-all text-xs text-[#BAA796] hover:text-[#F5EFE6] group"
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <ExternalLink className="w-3.5 h-3.5 text-[#78976A] group-hover:text-[#D4A043] shrink-0" />
+                            <span className="font-medium truncate">{src.title}</span>
+                          </div>
+                          <span className="text-[10px] text-[#78976A] shrink-0 font-sans">
+                            {isVi ? 'Xem nguồn ↗' : 'Visit ↗'}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
 

@@ -506,7 +506,7 @@ export const CostumesRealm: React.FC<CostumesRealmProps> = ({
                           </span>
                           <ul className="text-xs font-sans text-[#D8CCC0] space-y-0.5 list-disc list-inside">
                             {item.designFeatures.slice(0, 2).map((feat, fIdx) => (
-                              <li key={fIdx} className="truncate">{feat}</li>
+                              <li key={`${item.id}-feat-${fIdx}`} className="truncate">{feat}</li>
                             ))}
                           </ul>
                         </div>
@@ -525,7 +525,7 @@ export const CostumesRealm: React.FC<CostumesRealmProps> = ({
                         <span className="text-[10px] text-[#8E7B6C] font-sans font-medium mr-1">Chất liệu:</span>
                         {item.recommendedFabrics.map((fabric, fIdx) => (
                           <span
-                            key={fIdx}
+                            key={`${item.id}-fab-${fIdx}`}
                             className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1C140E] text-[#BAA796] border border-[#3E2C1E]"
                           >
                             {fabric}
@@ -676,7 +676,7 @@ export const CostumesRealm: React.FC<CostumesRealmProps> = ({
                     </h4>
                     <ul className="text-xs font-sans text-[#BAA796] space-y-1 list-disc list-inside">
                       {previewCostume.designFeatures.map((df, dfIdx) => (
-                        <li key={dfIdx}>{df}</li>
+                        <li key={`prev-df-${dfIdx}`}>{df}</li>
                       ))}
                     </ul>
                   </div>

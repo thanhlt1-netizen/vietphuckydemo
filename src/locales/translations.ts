@@ -35,6 +35,10 @@ export const TRANSLATIONS: Record<string, { vi: string; en: string }> = {
     vi: 'Phục Trang',
     en: 'Việt Phục Wardrobe',
   },
+  'nav.museum': {
+    vi: 'Bảo Tàng Số',
+    en: 'Digital Museum',
+  },
   'nav.atelier': {
     vi: 'Tùy Biến',
     en: 'Design Atelier',

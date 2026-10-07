@@ -449,7 +449,7 @@ export const ForumRealm: React.FC<ForumRealmProps> = ({
                     <div className="flex flex-wrap gap-1">
                       {post.tags.slice(0, 3).map((tag, idx) => (
                         <span
-                          key={idx}
+                          key={`${post.id}-tag-${idx}`}
                           className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1C140E] text-[#78976A] border border-[#3E2C1E]"
                         >
                           {tag}
@@ -645,15 +645,15 @@ export const ForumRealm: React.FC<ForumRealmProps> = ({
                   {/* List of existing reviews */}
                   {selectedPost.reviews && selectedPost.reviews.length > 0 ? (
                     <div className="space-y-2.5">
-                      {selectedPost.reviews.map((rev) => (
-                        <div key={rev.id} className="p-3.5 rounded-xl bg-[#140D08] border border-[#3E2C1E] space-y-1">
+                      {selectedPost.reviews.map((rev, revIdx) => (
+                        <div key={rev.id || `rev-${revIdx}`} className="p-3.5 rounded-xl bg-[#140D08] border border-[#3E2C1E] space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-sans font-bold text-[#F5EFE6]">
                               {rev.author}
                             </span>
                             <div className="flex items-center gap-0.5 text-[#D4A043]">
                               {[...Array(rev.stars)].map((_, sIdx) => (
-                                <Star key={sIdx} className="w-3 h-3 fill-current" />
+                                <Star key={`star-${rev.id || revIdx}-${sIdx}`} className="w-3 h-3 fill-current" />
                               ))}
                               <span className="text-[10px] text-[#8E7B6C] ml-1.5">{rev.date}</span>
                             </div>

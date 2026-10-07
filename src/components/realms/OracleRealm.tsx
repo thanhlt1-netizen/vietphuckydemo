@@ -246,7 +246,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {currentEval.cultural.preservedFeatures.map((feat, fIdx) => (
-                        <div key={fIdx} className="flex items-center gap-2 text-xs font-sans text-[#BAA796]">
+                        <div key={`pres-${fIdx}`} className="flex items-center gap-2 text-xs font-sans text-[#BAA796]">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#78976A] flex-shrink-0" />
                           <span>{feat}</span>
                         </div>
@@ -263,7 +263,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <ul className="text-xs font-sans text-[#E0CCC0] space-y-1 list-disc list-inside">
                       {currentEval.cultural.violations.map((violation, vIdx) => (
-                        <li key={vIdx} className="leading-relaxed">{violation}</li>
+                        <li key={`viol-${vIdx}`} className="leading-relaxed">{violation}</li>
                       ))}
                     </ul>
                     {currentEval.cultural.improvementAdvice && (
@@ -343,7 +343,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <ul className="text-xs font-sans text-[#BAA796] space-y-1 list-disc list-inside">
                       {currentEval.aesthetic.actionableSuggestions.map((sug, sIdx) => (
-                        <li key={sIdx}>{sug}</li>
+                        <li key={`sug-${sIdx}`}>{sug}</li>
                       ))}
                     </ul>
                   </div>

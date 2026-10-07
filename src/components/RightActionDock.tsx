@@ -10,7 +10,8 @@ import {
   User,
   Camera,
   MessageSquare,
-  MapPin
+  MapPin,
+  Landmark
 } from 'lucide-react';
 import { RealmScene } from '../types/scenes';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -41,6 +42,7 @@ export const RightActionDock: React.FC<RightActionDockProps> = ({
     { id: 'gate', labelKey: 'nav.home', shortLabelKey: isVi ? 'Chính' : 'Gate', icon: Home },
     { id: 'resonance', labelKey: 'nav.resonance', shortLabelKey: isVi ? 'Bối Cảnh' : 'Context', icon: Compass },
     { id: 'sanctuary', labelKey: 'nav.sanctuary', shortLabelKey: 'Việt Phục', icon: Shirt },
+    { id: 'museum', labelKey: 'nav.museum', shortLabelKey: isVi ? 'Bảo Tàng' : 'Museum', icon: Landmark },
     { id: 'atelier', labelKey: 'nav.atelier', shortLabelKey: isVi ? 'Tùy Biến' : 'Atelier', icon: Palette },
     { id: 'tryon', labelKey: 'nav.tryon', shortLabelKey: isVi ? 'Thử Đồ' : 'Try-On', icon: Camera },
     { id: 'forum', labelKey: 'nav.forum', shortLabelKey: isVi ? 'Diễn Đàn' : 'Forum', icon: MessageSquare },

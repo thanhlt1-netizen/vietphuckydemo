@@ -234,8 +234,8 @@ export const CommunityForumModal: React.FC<CommunityForumModalProps> = ({
                           onChange={(e) => setSelectedTag(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl bg-[#140D08] border border-[#3E2C1E] text-sm text-[#F5EFE6] focus:outline-none focus:border-[#78976A]"
                         >
-                          {availableTags.map((tag, tagIdx) => (
-                            <option key={`opt-tag-${tag}-${tagIdx}`} value={tag} className="bg-[#1C140E]">
+                          {availableTags.map((tag) => (
+                            <option key={tag} value={tag} className="bg-[#1C140E]">
                               {tag}
                             </option>
                           ))}
@@ -278,9 +278,9 @@ export const CommunityForumModal: React.FC<CommunityForumModalProps> = ({
             ) : (
               // DANH SÁCH BÀI ĐĂNG CỦA CỘNG ĐỒNG
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {posts.map((post, postIdx) => (
+                {posts.map((post) => (
                   <div
-                    key={`${post.id}-${postIdx}`}
+                    key={post.id}
                     className="p-5 rounded-2xl bg-[#241A13]/90 border border-[#423023] hover:border-[#594232] transition-all flex flex-col justify-between space-y-4"
                   >
                     <div>
@@ -360,7 +360,7 @@ export const CommunityForumModal: React.FC<CommunityForumModalProps> = ({
                       <div className="flex flex-wrap gap-1.5">
                         {post.tags.map((t, idx) => (
                           <span
-                            key={`${post.id}-tag-${idx}`}
+                            key={idx}
                             className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1C140E] text-[#78976A] border border-[#3E2C1E]"
                           >
                             {t}

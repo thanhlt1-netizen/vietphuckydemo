@@ -11,7 +11,6 @@ import {
   MapPin,
   User,
   Info,
-  Landmark,
 } from 'lucide-react';
 import { RealmScene } from '../../types/scenes';
 import { AppLogo } from '../brand/AppLogo';
@@ -42,12 +41,6 @@ export const HomeRealm: React.FC<HomeRealmProps> = ({ onNavigate }) => {
       label: isVi ? 'Kho Phục Trang' : 'Việt Phục Wardrobe',
       desc: isVi ? 'Khám phá 9 bộ Việt Phục chuẩn mực di sản' : 'Explore 9 historically accurate authentic Việt Phục styles',
       icon: Shirt,
-    },
-    {
-      id: 'museum',
-      label: isVi ? 'Bảo Tàng Số Di Sản' : 'Digital Heritage Museum',
-      desc: isVi ? 'Trưng bày hiện vật quý giá & tư liệu mộc bản, điển lệ xác thực' : 'Explore authenticated historical relics, woodcut archives & royal court decrees',
-      icon: Landmark,
     },
     {
       id: 'atelier',

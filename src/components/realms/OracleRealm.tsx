@@ -12,17 +12,12 @@ import {
   Info,
   RefreshCw,
   Camera,
-  FileCheck,
-  Globe,
-  Loader2,
-  ExternalLink,
-  Search
+  FileCheck
 } from 'lucide-react';
 import { AIEvaluationSummary, OutfitCustomization } from '../../types/customization';
 import { RecommendedCostume } from '../../types/context';
 import { Character2DViewer } from '../customizer/Character2DViewer';
 import { AIEvaluationService } from '../../services/aiEvaluationService';
-import { HeritageSearchService, SearchGroundingResult } from '../../services/heritageSearchService';
 import { normalizeCostumeKey, getCostumeDefaultColors } from '../../data/costumeDefaults';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -81,26 +76,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
 
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Search Grounding state for live historical verification
-  const [groundingResult, setGroundingResult] = useState<SearchGroundingResult | null>(null);
-  const [isLoadingGrounding, setIsLoadingGrounding] = useState(false);
-  const [isGroundingExpanded, setIsGroundingExpanded] = useState(false);
-
-  const fetchHeritageGrounding = async () => {
-    if (isLoadingGrounding) return;
-    setIsLoadingGrounding(true);
-    setIsGroundingExpanded(true);
-    try {
-      const q = `Quy chuẩn điển chế và đặc trưng lịch sử của ${activeCostumeName} trong văn hóa truyền thống Việt Nam`;
-      const result = await HeritageSearchService.searchHeritageGrounding(q);
-      setGroundingResult(result);
-    } catch (err) {
-      console.warn('Lỗi tra cứu di sản:', err);
-    } finally {
-      setIsLoadingGrounding(false);
-    }
-  };
 
   // Đồng bộ khi prop evaluation hoặc active costume thay đổi
   useEffect(() => {
@@ -271,7 +246,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {currentEval.cultural.preservedFeatures.map((feat, fIdx) => (
-                        <div key={`pres-${fIdx}`} className="flex items-center gap-2 text-xs font-sans text-[#BAA796]">
+                        <div key={fIdx} className="flex items-center gap-2 text-xs font-sans text-[#BAA796]">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#78976A] flex-shrink-0" />
                           <span>{feat}</span>
                         </div>
@@ -288,7 +263,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <ul className="text-xs font-sans text-[#E0CCC0] space-y-1 list-disc list-inside">
                       {currentEval.cultural.violations.map((violation, vIdx) => (
-                        <li key={`viol-${vIdx}`} className="leading-relaxed">{violation}</li>
+                        <li key={vIdx} className="leading-relaxed">{violation}</li>
                       ))}
                     </ul>
                     {currentEval.cultural.improvementAdvice && (
@@ -298,73 +273,6 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     )}
                   </div>
                 )}
-
-                {/* Google Search Grounding Verification Box */}
-                <div className="mt-4 pt-3 border-t border-[#3E2C1E]/60">
-                  <div className="flex items-center justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!groundingResult) {
-                          fetchHeritageGrounding();
-                        } else {
-                          setIsGroundingExpanded(!isGroundingExpanded);
-                        }
-                      }}
-                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1A120C] hover:bg-[#2A1D14] border border-[#423023] hover:border-[#D4A043]/50 text-xs text-[#E5B869] font-sans font-medium transition-all cursor-pointer"
-                    >
-                      <Globe className="w-3.5 h-3.5 text-[#78976A]" />
-                      <span>
-                        {isLoadingGrounding
-                          ? (isVi ? 'Đang đối chiếu Google Search...' : 'Searching with Google...')
-                          : (isVi ? 'Đối chiếu tư liệu bảo tàng (Google Search Grounding)' : 'Verify with Google Search Grounding')}
-                      </span>
-                      {isLoadingGrounding && <Loader2 className="w-3 h-3 animate-spin text-[#D4A043]" />}
-                    </button>
-
-                    <span className="text-[10px] font-sans text-[#8A7561]">gemini-3.5-flash</span>
-                  </div>
-
-                  <AnimatePresence>
-                    {isGroundingExpanded && groundingResult && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 p-4 rounded-2xl bg-[#140D08] border border-[#3E2C1E] space-y-3"
-                      >
-                        <div className="flex items-center justify-between text-xs text-[#78976A] font-semibold border-b border-[#3E2C1E] pb-2">
-                          <span>✓ Đối chiếu điển chế lịch sử & hiện vật bảo tàng:</span>
-                        </div>
-                        <p className="text-xs text-[#BAA796] font-sans whitespace-pre-line leading-relaxed">
-                          {groundingResult.answer}
-                        </p>
-
-                        {groundingResult.sources && groundingResult.sources.length > 0 && (
-                          <div className="pt-2 border-t border-[#3E2C1E]/60 space-y-1.5">
-                            <span className="text-[10px] font-sans font-semibold text-[#8A7561] uppercase block">
-                              {isVi ? 'Nguồn trích dẫn uy tín:' : 'Verified citations:'}
-                            </span>
-                            <div className="flex flex-wrap gap-2">
-                              {groundingResult.sources.map((src, sIdx) => (
-                                <a
-                                  key={`oracle-src-${sIdx}`}
-                                  href={src.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1C140E] hover:bg-[#241A13] border border-[#3E2C1E] text-[11px] text-[#BAA796] hover:text-[#E5B869] transition-colors"
-                                >
-                                  <ExternalLink className="w-3 h-3 text-[#78976A]" />
-                                  <span className="truncate max-w-[200px]">{src.title}</span>
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
               </div>
 
               {/* 2. Aesthetic & Color Harmony Assessment (Tiêu chí B) */}
@@ -435,7 +343,7 @@ export const OracleRealm: React.FC<OracleRealmProps> = ({
                     </span>
                     <ul className="text-xs font-sans text-[#BAA796] space-y-1 list-disc list-inside">
                       {currentEval.aesthetic.actionableSuggestions.map((sug, sIdx) => (
-                        <li key={`sug-${sIdx}`}>{sug}</li>
+                        <li key={sIdx}>{sug}</li>
                       ))}
                     </ul>
                   </div>

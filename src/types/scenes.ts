@@ -3,7 +3,6 @@ export type RealmScene =
   | 'home'
   | 'resonance'
   | 'sanctuary'
-  | 'museum'
   | 'atelier'
   | 'oracle'
   | 'tryon'
@@ -64,12 +63,6 @@ export const SCENES: Record<RealmScene, SceneMeta> = {
     title: 'Phục Trang',
     subTitle: 'Phom dáng cổ điển qua các thời kỳ hưng thịnh',
     tagline: 'Tuyển tập cổ phục',
-  },
-  museum: {
-    id: 'museum',
-    title: 'Bảo Tàng Số',
-    subTitle: 'Trưng bày hiện vật và tư liệu di sản xác thực',
-    tagline: 'Bảo tàng số',
   },
   atelier: {
     id: 'atelier',

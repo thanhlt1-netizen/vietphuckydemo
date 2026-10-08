@@ -19,7 +19,6 @@ import { OracleRealm } from './components/realms/OracleRealm';
 import { VirtualTryOnRealm } from './components/realms/VirtualTryOnRealm';
 import { ForumRealm } from './components/realms/ForumRealm';
 import { ChronicleRealm } from './components/realms/ChronicleRealm';
-import { MuseumRealm } from './components/realms/MuseumRealm';
 import { RealmPlaceholderStage } from './components/realms/RealmPlaceholderStage';
 import { RealmScene, SCENES } from './types/scenes';
 import { UserProfile } from './types/auth';
@@ -37,7 +36,6 @@ const SCENE_FLOW: RealmScene[] = [
   'home',
   'resonance',
   'sanctuary',
-  'museum',
   'atelier',
   'oracle',
   'tryon',
@@ -391,33 +389,6 @@ function AppContent() {
                     } catch {}
                   }}
                   onContinue={() => navigateTo('atelier')}
-                  onBack={handlePreviousScene}
-                />
-              ) : currentScene === 'museum' ? (
-                <MuseumRealm
-                  onNavigateToCostume={(costumeId) => {
-                    const found = DEFAULT_FEATURED_COSTUMES.find((c) => c.id === costumeId);
-                    if (found) {
-                      setSelectedCostume(found);
-                      navigateTo('sanctuary');
-                    } else {
-                      navigateTo('sanctuary');
-                    }
-                  }}
-                  onNavigateToAtelier={(costumeId) => {
-                    if (costumeId) {
-                      const found = DEFAULT_FEATURED_COSTUMES.find((c) => c.id === costumeId);
-                      if (found) setSelectedCostume(found);
-                    }
-                    navigateTo('atelier');
-                  }}
-                  onNavigateToTryOn={(costumeId) => {
-                    if (costumeId) {
-                      const found = DEFAULT_FEATURED_COSTUMES.find((c) => c.id === costumeId);
-                      if (found) setSelectedCostume(found);
-                    }
-                    navigateTo('tryon');
-                  }}
                   onBack={handlePreviousScene}
                 />
               ) : currentScene === 'atelier' ? (

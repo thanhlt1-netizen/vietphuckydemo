@@ -323,12 +323,12 @@ export const SaveToLookbookModal: React.FC<SaveToLookbookModalProps> = ({
                     Chưa có album nào. Hãy bấm "Tạo Lookbook mới" ở trên!
                   </div>
                 ) : (
-                  albums.map((album, idx) => {
+                  albums.map((album) => {
                     const isSelected = selectedAlbumId === album.id;
                     const count = album.items?.length || 0;
                     return (
                       <div
-                        key={`${album.id}-${idx}`}
+                        key={album.id}
                         onClick={() => setSelectedAlbumId(album.id)}
                         className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                           isSelected

@@ -140,7 +140,7 @@ export const TailorRealm: React.FC<TailorRealmProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredShops.map((shop, index) => (
           <motion.div
-            key={`${shop.id}-${index}`}
+            key={shop.id}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06 }}
@@ -167,9 +167,9 @@ export const TailorRealm: React.FC<TailorRealmProps> = ({
               </p>
 
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {shop.specialties.map((spec, sIdx) => (
+                {shop.specialties.map((spec) => (
                   <span
-                    key={`${shop.id}-spec-${sIdx}`}
+                    key={spec}
                     className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#3A2E22] text-[#E8D5B5] border border-[#423023]"
                   >
                     {spec}

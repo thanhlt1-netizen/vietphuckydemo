@@ -574,14 +574,14 @@ export const ChronicleRealm: React.FC<ChronicleRealmProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {albums.map((album, aIdx) => {
+              {albums.map((album) => {
                 const count = album.items?.length || 0;
                 const designCount = album.items?.filter((i) => i.type === 'design').length || 0;
                 const tryonCount = album.items?.filter((i) => i.type === 'tryon').length || 0;
 
                 return (
                   <motion.div
-                    key={`${album.id}-${aIdx}`}
+                    key={album.id}
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -714,9 +714,9 @@ export const ChronicleRealm: React.FC<ChronicleRealmProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.map((item, idx) => (
+              {filteredItems.map((item) => (
                 <motion.div
-                  key={`${item.id}-${item.albumId || 'album'}-${idx}`}
+                  key={item.id}
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1544,9 +1544,9 @@ export const ChronicleRealm: React.FC<ChronicleRealmProps> = ({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {filteredQuickTryOnItems.map((item, idx) => (
+                    {filteredQuickTryOnItems.map((item) => (
                       <div
-                        key={`${item.id}-${item.albumId || 'quick'}-${idx}`}
+                        key={item.id}
                         className="group relative rounded-2xl overflow-hidden bg-[#241A13] border border-[#3E2C1E] hover:border-[#D4A043]/70 shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                       >
                         {/* Hình ảnh trang phục */}
